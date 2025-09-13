@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { loadExec, ExecModuleHandle, ExecResult } from './execLoader';
+import { loadExec, ExecModuleHandle, ExecResult, LoadExecOptions } from './execLoader';
 
-export function useFibExec() {
+export interface UseExecOptions extends LoadExecOptions { }
+
+export function useExec(options: UseExecOptions = {}) {
   const [loading, setLoading] = useState(true);
   const [moduleError, setModuleError] = useState<string | null>(null);
   const execRef = useRef<ExecModuleHandle | null>(null);
@@ -10,7 +12,10 @@ export function useFibExec() {
     let cancelled = false;
     (async () => {
       try {
-        const exec = await loadExec();
+        const exec = await loadExec({
+          onStdoutLine: options.onStdoutLine,
+          onStderrLine: options.onStderrLine
+        });
         if (!cancelled) {
           execRef.current = exec;
           setLoading(false);

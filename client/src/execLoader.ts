@@ -4,8 +4,15 @@
 
 export interface ExecResult {
   exitCode: number;
-  stdout: string;
-  stderr: string;
+  stdout: string;        // joined with \n
+  stderr: string;        // joined with \n
+  stdoutLines: string[]; // individual lines (exact chunks captured)
+  stderrLines: string[];
+}
+
+export interface LoadExecOptions {
+  onStdoutLine?: (line: string) => void;
+  onStderrLine?: (line: string) => void;
 }
 
 export interface ExecModuleHandle {
@@ -20,7 +27,7 @@ export interface ExecModuleHandle {
 declare function createExec(moduleOverrides?: any): Promise<any>;
 declare function createFibExec(moduleOverrides?: any): Promise<any>;
 
-export async function loadExec(): Promise<ExecModuleHandle> {
+export async function loadExec(opts: LoadExecOptions = {}): Promise<ExecModuleHandle> {
   let stdoutBuf: string[] = [];
   let stderrBuf: string[] = [];
   if (typeof window === 'undefined' || typeof document === 'undefined') {
@@ -77,8 +84,14 @@ export async function loadExec(): Promise<ExecModuleHandle> {
 
   const Module = await factory({
     locateFile: (p: string) => (p.endsWith('.wasm') ? '/exec.wasm' : p),
-    print: (text: string) => { stdoutBuf.push(text); },
-    printErr: (text: string) => { stderrBuf.push(text); }
+    print: (text: string) => {
+      stdoutBuf.push(text);
+      opts.onStdoutLine?.(text);
+    },
+    printErr: (text: string) => {
+      stderrBuf.push(text);
+      opts.onStderrLine?.(text);
+    }
   });
 
   if (typeof Module.callMain !== 'function') {
@@ -100,7 +113,13 @@ export async function loadExec(): Promise<ExecModuleHandle> {
         exitCode = 1;
       }
     }
-    return { exitCode, stdout: stdoutBuf.join('\n'), stderr: stderrBuf.join('\n') };
+    return {
+      exitCode,
+      stdout: stdoutBuf.join('\n'),
+      stderr: stderrBuf.join('\n'),
+      stdoutLines: [...stdoutBuf],
+      stderrLines: [...stderrBuf]
+    };
   };
 
   const dispose = () => {

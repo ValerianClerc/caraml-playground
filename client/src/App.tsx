@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { FibExecDemo } from './FibExecDemo'
+import { ExecDemo } from './ExecDemo'
 
 export default function App() {
   const [hello, setHello] = useState<string | null>(null)
@@ -39,7 +39,7 @@ export default function App() {
         {loading && <p>Loading...</p>}
         {error && <p style={{ color: 'crimson' }}>Error: {error}</p>}
         {hello && <pre style={{ background: '#f1f5f9', padding: 12 }}>{hello}</pre>}
-        <FibExecDemo />
+        <ExecDemo />
       </section>
     </div>
   )
