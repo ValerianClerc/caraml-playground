@@ -12,6 +12,7 @@ export function useExec(options: UseExecOptions = {}) {
     let cancelled = false;
     (async () => {
       try {
+        // TODO: find a way to cancel WASM execution?
         const exec = await loadExec({
           onStdoutLine: options.onStdoutLine,
           onStderrLine: options.onStderrLine

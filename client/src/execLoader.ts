@@ -20,13 +20,6 @@ export interface ExecModuleHandle {
   dispose: () => void;
 }
 
-// The build should set -s EXPORT_NAME="createExec" (recommended). If previously built
-// with EXPORT_NAME="createFibExec" we attempt both for backward compatibility.
-// We'll dynamically resolve whichever exists on the loaded module namespace.
-// Types are loose because we rely on runtime detection.
-declare function createExec(moduleOverrides?: any): Promise<any>;
-declare function createFibExec(moduleOverrides?: any): Promise<any>;
-
 export async function loadExec(opts: LoadExecOptions = {}): Promise<ExecModuleHandle> {
   let stdoutBuf: string[] = [];
   let stderrBuf: string[] = [];
@@ -55,7 +48,7 @@ export async function loadExec(opts: LoadExecOptions = {}): Promise<ExecModuleHa
 
   async function findFactory(retries = 3, delayMs = 10): Promise<any> {
     for (let i = 0; i < retries; i++) {
-      const cand = (globalThis as any).createExec || (globalThis as any).createFibExec || (globalThis as any).Module || (globalThis as any).default;
+      const cand = globalThis.createExec || globalThis.Module //|| globalThis.default;
       if (cand) return cand;
       // Wait a tick (some bundlers defer var hoisting until microtask end)
       await new Promise(r => setTimeout(r, delayMs));
@@ -72,7 +65,7 @@ export async function loadExec(opts: LoadExecOptions = {}): Promise<ExecModuleHa
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const code = await resp.text();
       // Evaluate in global scope; wrap to return factory variable if defined.
-      factory = (0, eval)(code + '\n; (typeof createExec!=="undefined" ? createExec : (typeof createFibExec!=="undefined" ? createFibExec : undefined));');
+      factory = (0, eval)(code + '\n; (typeof createExec!=="undefined" ? createExec : undefined);');
     } catch (e) {
       throw new Error('Failed to locate Emscripten factory (attempted load + eval): ' + e);
     }
@@ -101,6 +94,7 @@ export async function loadExec(opts: LoadExecOptions = {}): Promise<ExecModuleHa
   const run = async (args: string[] = []): Promise<ExecResult> => {
     stdoutBuf = [];
     stderrBuf = [];
+    // TODO: validate that inputs work, once IO is added to CaraML
     Module.arguments = ['exec', ...args];
     let exitCode = 0;
     try {
@@ -123,6 +117,7 @@ export async function loadExec(opts: LoadExecOptions = {}): Promise<ExecModuleHa
   };
 
   const dispose = () => {
+    // TODO: clean up memory after each run
     // Not a full teardown; EXIT_RUNTIME=1 lets callMain unwind runtime.
     // To fully free memory, you'd create a new Module instance each run.
   };
