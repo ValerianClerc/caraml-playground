@@ -6,8 +6,42 @@ import { exec } from 'child_process';
 
 const app = new Hono();
 
+// Simple CORS middleware: allow an origin from env or default to Vite dev server
+const DEFAULT_CLIENT_ORIGIN = 'http://localhost:5173';
+const allowedOrigin = process.env.CORS_ORIGIN || DEFAULT_CLIENT_ORIGIN;
+
+app.use('*', async (c, next) => {
+  const origin = c.req.header('origin') || '';
+  // If the request has an Origin header and it matches allowedOrigin, echo it back.
+  if (origin && (origin === allowedOrigin || allowedOrigin === '*')) {
+    c.header('Access-Control-Allow-Origin', origin === '' ? allowedOrigin : origin);
+  } else if (!origin && allowedOrigin === '*') {
+    c.header('Access-Control-Allow-Origin', '*');
+  }
+
+  const corsHeaders: Record<string, string> = {
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+    'Access-Control-Allow-Credentials': 'true',
+  };
+
+  // Apply headers to the context for normal responses
+  Object.entries(corsHeaders).forEach(([k, v]) => c.header(k, v));
+
+  // Handle preflight: return native Response to avoid Hono overload typing issues
+  if (c.req.method === 'OPTIONS') {
+    const preflightHeaders: Record<string, string> = {};
+    // include the Access-Control-Allow-Origin from previously set header if present
+    const acaOrigin = c.res.headers.get('Access-Control-Allow-Origin') || allowedOrigin;
+    preflightHeaders['Access-Control-Allow-Origin'] = acaOrigin;
+    Object.assign(preflightHeaders, corsHeaders);
+    return new Response(null, { status: 204, headers: preflightHeaders });
+  }
+
+  await next();
+});
+
 const compileSchema = z.object({
-  mode: z.enum(['ir', 'binary', 'run']),
   sourceCode: z.string(),
 });
 
@@ -24,7 +58,7 @@ app.post('/compile', async (c) => {
   if (!parseResult.success) {
     return c.json({ error: parseResult.error.issues }, 400);
   }
-  const { mode, sourceCode } = parseResult.data;
+  const { sourceCode } = parseResult.data;
   return new Promise((resolve) => {
     exec('echo "Hello World"', (error, stdout, stderr) => {
       if (error) {

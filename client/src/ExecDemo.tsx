@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useExec } from './useExec';
 
 export function ExecDemo() {
-  const [n, setN] = useState('20');
   const [stdoutLive, setStdoutLive] = useState<string[]>([]);
   const [stderrLive, setStderrLive] = useState<string[]>([]);
   const [exitCode, setExitCode] = useState<number | null>(null);
@@ -23,7 +22,7 @@ export function ExecDemo() {
     setFinalStdout('');
     setFinalStderr('');
     try {
-      const res = await run([n]);
+      const res = await run([]);
       setExitCode(res.exitCode);
       setFinalStdout(res.stdout);
       setFinalStderr(res.stderr);
@@ -39,15 +38,6 @@ export function ExecDemo() {
     <div style={{ marginTop: 24 }}>
       <h2>Run Executable</h2>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span>n:</span>
-          <input
-            value={n}
-            onChange={e => setN(e.target.value)}
-            style={{ width: 80 }}
-            disabled={running}
-          />
-        </label>
         <button disabled={running} onClick={handleRun}>
           {running ? 'Running…' : 'Run'}
         </button>
