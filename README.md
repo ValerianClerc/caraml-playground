@@ -38,3 +38,4 @@ Plan:
 - [ ] Figure out compiled code TTL and garbage collection job. Store in DB?
 - [ ] Rate limiting, cost caps on cloud server
 - [ ] deploy via IAC, terraform?
+- [ ] lock down Postgres DB to be private vnet only

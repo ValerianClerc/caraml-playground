@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { serve } from '@hono/node-server';
 import type { AddressInfo } from 'net';
 import { exec } from 'child_process';
+import { createJobDBClient } from './jobDbClient.js';
+
 
 const app = new Hono();
 
@@ -41,6 +43,12 @@ app.use('*', async (c, next) => {
   await next();
 });
 
+const jobDbClient = createJobDBClient();
+await jobDbClient.init();
+console.log('Job DB initialized')
+
+app.get('/health', (c) => c.json({ status: 'ok' }));
+
 const compileSchema = z.object({
   sourceCode: z.string(),
 });
@@ -59,23 +67,14 @@ app.post('/compile', async (c) => {
     return c.json({ error: parseResult.error.issues }, 400);
   }
   const { sourceCode } = parseResult.data;
-  return new Promise((resolve) => {
-    exec('echo "Hello World"', (error, stdout, stderr) => {
-      if (error) {
-        resolve(c.json({ error: stderr }, 500));
-      } else {
-        resolve(c.json({ result: stdout }));
-      }
-    });
-  });
+
+  const jobId = await jobDbClient.createJob(sourceCode);
+  return c.json({ jobId });
 });
 
 app.all('*', (c) => c.json({ message: 'Not Found' }, 404));
 
-// Set port and start server using Hono's Node adapter
-// Set port via environment variable
 process.env.PORT = '3000';
-// Start server and log listening port
 serve(app, (info: AddressInfo) => {
   console.log(`Server running on port ${info.port}`);
 });
