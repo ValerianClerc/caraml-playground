@@ -55,7 +55,7 @@ const compileSchema = z.object({
 
 type CompileParams = z.infer<typeof compileSchema>;
 
-app.post('/compile', async (c) => {
+app.post('/queue-compilation', async (c) => {
   let body: unknown;
   try {
     body = await c.req.json();
@@ -67,9 +67,21 @@ app.post('/compile', async (c) => {
     return c.json({ error: parseResult.error.issues }, 400);
   }
   const { sourceCode } = parseResult.data;
+  const jobInfo = await jobDbClient.createJob(sourceCode);
+  return c.json(jobInfo);
+});
 
-  const jobId = await jobDbClient.createJob(sourceCode);
-  return c.json({ jobId });
+app.get('/job-status/:jobId', async (c) => {
+  const { jobId } = c.req.param();
+  if (!jobId) {
+    return c.json({ error: 'Missing jobId parameter' }, 400);
+  }
+  try {
+    const jobStatus = await jobDbClient.getJobStatus(jobId);
+    return c.json(jobStatus);
+  } catch (e) {
+    return c.json({ error: (e as Error).message }, 500);
+  }
 });
 
 app.all('*', (c) => c.json({ message: 'Not Found' }, 404));

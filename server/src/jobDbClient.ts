@@ -3,10 +3,24 @@ import { Pool } from 'pg';
 
 const DB_SCOPE_URL = 'https://ossrdbms-aad.database.windows.net/.default';
 
-interface IJobDBClient {
+type Job = {
+  id: string;
+  sourceCode: string;
+  createdAt: Date;
+  updatedAt: Date;
+  startedAt: Date | null;
+  completedAt: Date | null;
+  status: 'pending' | 'running' | 'succeeded' | 'failed';
+  errorMessage: string | null;
+  artifactInlineWasm: Buffer | null;
+  artifactInlineJs: string | null;
+}
+
+export interface IJobDBClient {
   init(): Promise<void>;
-  createJob(sourceCode: string): Promise<string>; // returns job ID (UUID)
-  getJobStatus(jobId: string): Promise<string>; // returns job status
+  createJob(sourceCode: string): Promise<Pick<Job, 'id' | 'status'>>; // returns job ID (UUID)
+  getJobStatus(jobId: string): Promise<Pick<Job, 'id' | 'status' | 'errorMessage' | 'startedAt' | 'completedAt'>>; // returns job status
+  claimJob(): Promise<Pick<Job, 'id' | 'status' | 'sourceCode'> | null>;
   setJobStatus(jobId: string, status: string): Promise<void>;
   // setJobArtifacts(jobId: string, jsUrl: string | null, inlineWasm: Buffer | null, inlineJs: string | null): Promise<void>;
   // getJobArtifacts(jobId: string): Promise<{ jsUrl: string | null; inlineWasm: Buffer | null; inlineJs: string | null }>;
@@ -57,11 +71,13 @@ class AzurePostGresJobDBClient implements IJobDBClient {
     return Promise.resolve();
   }
 
-  async getJobStatus(jobId: string): Promise<string> {
+  async getJobStatus(jobId: string): Promise<Pick<Job, 'id' | 'status' | 'errorMessage' | 'startedAt' | 'completedAt'>> {
     if (!this.pool) throw new Error('DB not initialized');
-    const response = await this.pool.query<{ status: string }>(`SELECT status FROM jobs WHERE id = $1`, [jobId])
-      .then(res => res.rows[0]?.status ?? 'unknown');
-    return response;
+    const response = await this.pool.query<Pick<Job, 'id' | 'status' | 'errorMessage' | 'startedAt' | 'completedAt'>>(
+      `SELECT id, status, error_message, started_at, completed_at FROM jobs WHERE id = $1`,
+      [jobId]
+    );
+    return response.rows[0] ?? { id: jobId, status: 'unknown', errorMessage: null, startedAt: null, completedAt: null };
   }
 
   setJobStatus(jobId: string, status: string): Promise<void> {
@@ -70,11 +86,34 @@ class AzurePostGresJobDBClient implements IJobDBClient {
       .then(() => Promise.resolve());
   }
 
-  async createJob(sourceCode: string): Promise<string> {
+  async createJob(sourceCode: string): Promise<Pick<Job, 'id' | 'status'>> {
     if (!this.pool) throw new Error('DB not initialized');
     const jobId = crypto.randomUUID()
     await this.pool.query(`INSERT INTO jobs (id, source_code, status) VALUES ($1, $2, 'pending')`, [jobId, sourceCode]);
-    return jobId;
+    return { id: jobId, status: 'pending' };
+  }
+
+  async claimJob(): Promise<Pick<Job, 'id' | 'status' | 'sourceCode'> | null> {
+    if (!this.pool) throw new Error('DB not initialized');
+
+    // Use a CTE to atomically select and update a pending job
+    const sql = `WITH picked AS (
+        SELECT id FROM jobs
+        WHERE status = 'pending'
+        ORDER BY created_at
+        FOR UPDATE SKIP LOCKED
+        LIMIT 1
+      )
+      UPDATE jobs
+      SET status = 'running', started_at = now(), updated_at = now()
+      FROM picked
+      WHERE jobs.id = picked.id
+      RETURNING jobs.id, jobs.status, jobs.source_code`;
+
+    const res = await this.pool.query<{ id: string; status: Job['status']; source_code: string }>(sql);
+    if (res.rowCount === 0) return null;
+    const r = res.rows[0];
+    return { id: r.id, status: r.status, sourceCode: r.source_code };
   }
 }
 
