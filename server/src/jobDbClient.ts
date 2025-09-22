@@ -21,7 +21,7 @@ export interface IJobDBClient {
   createJob(sourceCode: string): Promise<Pick<Job, 'id' | 'status'>>; // returns job ID (UUID)
   getJobStatus(jobId: string): Promise<Pick<Job, 'id' | 'status' | 'errorMessage' | 'startedAt' | 'completedAt'>>; // returns job status
   claimJob(): Promise<Pick<Job, 'id' | 'status' | 'sourceCode'> | null>;
-  setJobStatus(jobId: string, status: string): Promise<void>;
+  updateJob(jobId: string, job: Partial<Job>): Promise<void>;
   // setJobArtifacts(jobId: string, jsUrl: string | null, inlineWasm: Buffer | null, inlineJs: string | null): Promise<void>;
   // getJobArtifacts(jobId: string): Promise<{ jsUrl: string | null; inlineWasm: Buffer | null; inlineJs: string | null }>;
 }
@@ -80,10 +80,45 @@ class AzurePostGresJobDBClient implements IJobDBClient {
     return response.rows[0] ?? { id: jobId, status: 'unknown', errorMessage: null, startedAt: null, completedAt: null };
   }
 
-  setJobStatus(jobId: string, status: string): Promise<void> {
+  async updateJob(jobId: string, job: Partial<Job>): Promise<void> {
     if (!this.pool) throw new Error('DB not initialized');
-    return this.pool.query(`UPDATE jobs SET status = $1, updated_at = now() WHERE id = $2`, [status, jobId])
-      .then(() => Promise.resolve());
+    if (!jobId) throw new Error('Job ID is required to update job');
+    // Map of allowed Job fields (camelCase) to DB columns (snake_case)
+    const colMap: Record<string, string> = {
+      sourceCode: 'source_code',
+      status: 'status',
+      startedAt: 'started_at',
+      completedAt: 'completed_at',
+      updatedAt: 'updated_at',
+      createdAt: 'created_at',
+      errorMessage: 'error_message',
+      artifactInlineWasm: 'artifact_inline_wasm',
+      artifactInlineJs: 'artifact_inline_js'
+    };
+
+    const entries = Object.entries(job).filter(([k, v]) => v !== undefined && k in colMap);
+    if (entries.length === 0) return Promise.resolve();
+
+    const setClauses: string[] = [];
+    const values: any[] = [];
+    let idx = 1;
+    for (const [key, val] of entries) {
+      const col = colMap[key];
+      setClauses.push(`${col} = $${idx}`);
+      // let pg handle JS Date <-> timestamptz and Buffer for BYTEA
+      values.push(val as any);
+      idx++;
+    }
+
+    // If caller didn't explicitly set updatedAt, update it to now()
+    if (!('updatedAt' in job)) {
+      setClauses.push(`updated_at = now()`);
+    }
+
+    const sql = `UPDATE jobs SET ${setClauses.join(', ')} WHERE id = $${idx}`;
+    values.push(jobId);
+    await this.pool.query(sql, values);
+    return Promise.resolve();
   }
 
   async createJob(sourceCode: string): Promise<Pick<Job, 'id' | 'status'>> {
