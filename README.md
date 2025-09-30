@@ -25,7 +25,7 @@ Plan:
 ## High-level flow:
 
 1. Code is written in the web frontend, users can submit code to be compiled to LLVM IR and executed
-2. Submit code to the /compile endpoint, with the source code and the "mode" (ir-only, run) (Note: maybe just have 1 mode initially)
+2. Submit code to the /queue-compilation endpoint, with the source code and the "mode" (ir-only, run) (Note: maybe just have 1 mode initially)
 3. Backend processing:
   - Backend calls caraml binary which is built into the Docker container, to compile the code to LLVM IR.
   - Backend calls Emscripten to compile the LLVM IR to WASM/JS so that user code is executable in the client.
@@ -39,3 +39,7 @@ Plan:
 - [ ] Rate limiting, cost caps on cloud server
 - [ ] deploy via IAC, terraform?
 - [ ] lock down Postgres DB to be private vnet only
+- [ ] Migrate workers to use event-based activation? Or cloud-native solution? (queue?)
+- [ ] Move to WS/event-based mechanism for notifying the frontend about compilation updates (instead of polling)
+- [ ] Set up Azure ManagedIdentities
+- [ ] Lock down blob storage access to only via Managed Identity and vnet

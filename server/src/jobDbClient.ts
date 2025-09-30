@@ -49,9 +49,9 @@ class AzurePostGresJobDBClient implements IJobDBClient {
       port: process.env.PGPORT ? parseInt(process.env.PGPORT) : 5432,
       database: process.env.PGDATABASE ?? 'postgres',
       password: await this.getToken(),
-      user: "valerian.clerc_gmail.com#EXT#@valerianclercgmail.onmicrosoft.co",// process.env.PGUSER,
-      log: (msg) => console.log("DB Log:", msg),
-      ssl: true
+      user: process.env.NODE_ENV === "development" ? "valerian.clerc_gmail.com#EXT#@valerianclercgmail.onmicrosoft.co" : "caraml-server",
+      log: (msg) => console.debug("[db] ", msg),
+      ssl: true,
     });
 
     await this.pool.query(`CREATE TABLE IF NOT EXISTS jobs (

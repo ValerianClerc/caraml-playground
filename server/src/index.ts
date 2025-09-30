@@ -6,6 +6,7 @@ import { exec } from 'child_process';
 import { createJobDBClient } from './jobDbClient.js';
 
 
+console.log('Starting server...');
 const app = new Hono();
 
 // Simple CORS middleware: allow an origin from env or default to Vite dev server
@@ -90,7 +91,6 @@ app.get('/job-status/:jobId', async (c) => {
 
 app.all('*', (c) => c.json({ message: 'Not Found' }, 404));
 
-process.env.PORT = '3000';
 serve(app, (info: AddressInfo) => {
   console.log(`Server running on port ${info.port}`);
 });

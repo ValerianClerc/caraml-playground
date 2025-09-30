@@ -8,7 +8,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp ./src/worker/worker.cjs ./dist/worker/worker.cjs",
     "start": "node dist/index.js",
     "dev": "nodemon --exec \"node --loader ts-node/esm\" src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"

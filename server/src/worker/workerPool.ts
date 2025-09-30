@@ -1,4 +1,6 @@
 import { Worker } from 'worker_threads';
+import { fileURLToPath } from 'url';
+import path from 'path';
 import type { IJobDBClient } from '../jobDbClient.js'
 
 interface WorkerData {
@@ -19,8 +21,12 @@ export function startWorkerPool(dbClient: IJobDBClient, opts: WorkerPoolOptions 
 
   const workers: Array<WorkerData> = [];
 
+  // Resolve path to worker script relative to this file (works in ts-node and built dist)
+  const thisDir = path.dirname(fileURLToPath(import.meta.url));
+  const workerScript = path.resolve(thisDir, 'worker.cjs');
+
   function spawnWorker(index: number) {
-    const w = new Worker('./src/worker/worker.cjs');
+    const w = new Worker(workerScript);
     const slot = workers[index];
     if (slot) {
       slot.worker = w;
@@ -107,7 +113,7 @@ export function startWorkerPool(dbClient: IJobDBClient, opts: WorkerPoolOptions 
         console.error('[pool] job failed', job.id, result.error);
       }
     } catch (err: any) {
-      console.error('claimAndRun error', err?.stack ?? err);
+      console.error('[pool] claimAndRun error', err?.stack ?? err);
     } finally {
       const slot = workers[workerIdx];
       if (slot) slot.busy = false;
@@ -118,7 +124,7 @@ export function startWorkerPool(dbClient: IJobDBClient, opts: WorkerPoolOptions 
   let stopped = false;
   (async function loop() {
     while (!stopped) {
-      console.debug('Worker pool tick');
+      console.debug('[pool] Worker pool tick');
       for (let i = 0; i < workers.length; i++) {
         if (!workers[i].busy) {
           // Launch job attempt but don't await all sequentially
