@@ -2,6 +2,13 @@ import { Worker } from 'worker_threads';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import type { IJobDBClient } from '../jobDbClient.js'
+import { promisify } from 'util';
+import { exec } from 'child_process';
+
+const execAsync = promisify(exec);
+
+const RUNTIME_C_PATH = 'runtime.c';
+const RUNTIME_O_PATH = 'runtime.o';
 
 interface WorkerData {
   worker: Worker;
@@ -14,7 +21,7 @@ export interface WorkerPoolOptions {
   jobTimeoutMs?: number;
 }
 
-export function startWorkerPool(dbClient: IJobDBClient, opts: WorkerPoolOptions = {}) {
+export async function startWorkerPool(dbClient: IJobDBClient, opts: WorkerPoolOptions = {}) {
   const size = opts.size ?? 2;
   const pollIntervalMs = opts.jobPollIntervalMs ?? 1000;
   const jobTimeoutMs = opts.jobTimeoutMs ?? 30_000;
@@ -24,6 +31,12 @@ export function startWorkerPool(dbClient: IJobDBClient, opts: WorkerPoolOptions 
   // Resolve path to worker script relative to this file (works in ts-node and built dist)
   const thisDir = path.dirname(fileURLToPath(import.meta.url));
   const workerScript = path.resolve(thisDir, 'worker.cjs');
+
+  console.debug('[pool] Emitting caraml runtime');
+  await execAsync(`caraml --emit-runtime ${RUNTIME_C_PATH}`)
+  console.debug('[pool] Compiling caraml runtime with emscripten');
+  await execAsync(`emcc -O2 ${RUNTIME_C_PATH} -c -o ${RUNTIME_O_PATH}`)
+  console.debug('[pool] Runtime ready');
 
   function spawnWorker(index: number) {
     const w = new Worker(workerScript);
@@ -58,6 +71,7 @@ export function startWorkerPool(dbClient: IJobDBClient, opts: WorkerPoolOptions 
     try {
       const job = await dbClient.claimJob();
       if (!job) return;
+      console.debug(`[pool] worker ${workerIdx} claimed job ${job.id}`);
       slot.busy = true;
 
       // send job to worker and wait for result with timeout
@@ -124,7 +138,6 @@ export function startWorkerPool(dbClient: IJobDBClient, opts: WorkerPoolOptions 
   let stopped = false;
   (async function loop() {
     while (!stopped) {
-      console.debug('[pool] Worker pool tick');
       for (let i = 0; i < workers.length; i++) {
         if (!workers[i].busy) {
           // Launch job attempt but don't await all sequentially

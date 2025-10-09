@@ -50,9 +50,12 @@ console.log('Job DB initialized')
 
 // start local worker pool (MVP)
 import { startWorkerPool } from './worker/workerPool.js';
-const pool = startWorkerPool(jobDbClient, { size: 2, jobPollIntervalMs: 800, jobTimeoutMs: 30_000 });
+const pool = await startWorkerPool(jobDbClient, { size: 2, jobPollIntervalMs: 800, jobTimeoutMs: 30_000 });
 
-app.get('/health', (c) => { return c.json({ status: 'ok' }); });
+app.get('/health', (c) => {
+  console.debug('/health pinged');
+  return c.json({ status: 'ok' });
+});
 
 const compileSchema = z.object({
   sourceCode: z.string(),

@@ -50,7 +50,6 @@ class AzurePostGresJobDBClient implements IJobDBClient {
       database: process.env.PGDATABASE ?? 'postgres',
       password: await this.getToken(),
       user: process.env.NODE_ENV === "development" ? "valerian.clerc_gmail.com#EXT#@valerianclercgmail.onmicrosoft.co" : "caraml-server",
-      log: (msg) => console.debug("[db] ", msg),
       ssl: true,
     });
 
