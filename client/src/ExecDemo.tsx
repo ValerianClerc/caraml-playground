@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useExec } from './useExec';
+import { API_URL } from './constants';
 
 export function ExecDemo() {
   const [stdoutLive, setStdoutLive] = useState<string[]>([]);
@@ -11,7 +12,9 @@ export function ExecDemo() {
 
   const { loading, error, run } = useExec({
     onStdoutLine: (line) => setStdoutLive(prev => [...prev, line]),
-    onStderrLine: (line) => setStderrLive(prev => [...prev, line])
+    onStderrLine: (line) => setStderrLive(prev => [...prev, line]),
+    execJsUrl: `${API_URL}/artifacts/c75400f7-6cbf-46ce-a69b-c7bc4def8d31/js`,
+    execWasmUrl: `${API_URL}/artifacts/c75400f7-6cbf-46ce-a69b-c7bc4def8d31/wasm`
   });
 
   const handleRun = async () => {

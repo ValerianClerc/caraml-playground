@@ -50,6 +50,7 @@ console.log('Job DB initialized')
 
 // start local worker pool (MVP)
 import { startWorkerPool } from './worker/workerPool.js';
+import { artifactStorage } from './artifactStorage.js';
 const pool = await startWorkerPool(jobDbClient, { size: 2, jobPollIntervalMs: 800, jobTimeoutMs: 30_000 });
 
 app.get('/health', (c) => {
@@ -87,6 +88,40 @@ app.get('/job-status/:jobId', async (c) => {
   try {
     const jobStatus = await jobDbClient.getJobStatus(jobId);
     return c.json(jobStatus);
+  } catch (e) {
+    return c.json({ error: (e as Error).message }, 500);
+  }
+});
+
+app.get('/artifacts/:jobId/:ext', async (c) => {
+  const { jobId, ext } = c.req.param()
+  if (!jobId || !ext) {
+    return c.json({ error: 'Missing jobId or ext parameter' }, 400);
+  }
+  try {
+    const artifacts = await jobDbClient.getJobArtifacts(jobId);
+    if (ext !== 'js' && ext !== 'wasm' && ext !== 'ir') {
+      return c.json({ error: 'Invalid artifact extension' }, 400);
+    }
+    const artifactPath = ext === 'js' ? artifacts.js : ext === 'wasm' ? artifacts.wasm : artifacts.ir;
+    if (!artifactPath) {
+      return c.json({ error: 'Artifact not found in database' }, 404);
+    }
+    const artifactStream = await artifactStorage.getArtifactStream(artifactPath);
+    if (!artifactStream) {
+      return c.json({ error: 'Artifact not found in blob storage' }, 404);
+    }
+    const body = new ReadableStream({
+      start(controller) {
+        artifactStream.on('data', (chunk) => controller.enqueue(chunk));
+        artifactStream.on('end', () => controller.close());
+        artifactStream.on('error', (err) => controller.error(err));
+      }
+    });
+
+    const mimeType = ext === 'js' ? 'application/javascript' : ext === 'wasm' ? 'application/wasm' : 'text/plain';
+
+    return c.body(body, 200, { 'Content-Type': mimeType });
   } catch (e) {
     return c.json({ error: (e as Error).message }, 500);
   }

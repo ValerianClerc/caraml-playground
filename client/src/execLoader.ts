@@ -13,6 +13,21 @@ export interface ExecResult {
 export interface LoadExecOptions {
   onStdoutLine?: (line: string) => void;
   onStderrLine?: (line: string) => void;
+  /**
+   * URL (absolute or relative) to the Emscripten glue JS file (built with MODULARIZE=1).
+   * Defaults to '/exec.js'. May be cross-origin; script tag insert does not require CORS.
+   */
+  execJsUrl: string;
+  /**
+   * URL (absolute or relative) to the associated wasm binary. Defaults to '/exec.wasm'.
+   * Cross-origin allowed if server sends proper CORS headers (Emscripten's fetch requires it).
+   */
+  execWasmUrl: string;
+  /**
+   * Force reloading the script tag even if one with the same URL was already injected.
+   * Useful for hot reloading / version switching.
+   */
+  forceReloadScript?: boolean;
 }
 
 export interface ExecModuleHandle {
@@ -20,26 +35,36 @@ export interface ExecModuleHandle {
   dispose: () => void;
 }
 
-export async function loadExec(opts: LoadExecOptions = {}): Promise<ExecModuleHandle> {
+export async function loadExec(opts: LoadExecOptions): Promise<ExecModuleHandle> {
+  const {
+    onStdoutLine,
+    onStderrLine,
+    execJsUrl,
+    execWasmUrl,
+    forceReloadScript = false
+  } = opts;
+
   let stdoutBuf: string[] = [];
   let stderrBuf: string[] = [];
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     throw new Error('loadExec() must be called in a browser environment (window/document not available).');
   }
-  // Vite disallows importing raw JS from /public via ESM import. We inject a script tag.
-  // If already loaded, skip injection.
+  // Inject the script for the glue code. If already present for this exact URL, reuse unless forceReloadScript.
   function ensureScript(): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (document.querySelector('script[data-exec-glue]')) {
+      const selector = `script[data-exec-glue="${execJsUrl}"]`;
+      const existing = document.querySelector(selector);
+      if (existing && !forceReloadScript) {
         resolve();
         return;
       }
+      if (existing && forceReloadScript) existing.remove();
       const s = document.createElement('script');
-      s.src = '/exec.js';
+      s.src = execJsUrl;
       s.async = true;
-      s.dataset.execGlue = 'true';
+      s.dataset.execGlue = execJsUrl; // attribute keyed by URL allows multiple distinct modules
       s.onload = () => resolve();
-      s.onerror = (e) => reject(new Error('Failed to load /exec.js'));
+      s.onerror = () => reject(new Error(`Failed to load ${execJsUrl}`));
       document.head.appendChild(s);
     });
   }
@@ -61,29 +86,29 @@ export async function loadExec(opts: LoadExecOptions = {}): Promise<ExecModuleHa
   // Fallback: fetch + eval if not found (e.g., CSP permitting) – handles cases where script tag blocked or scope isolated.
   if (!factory) {
     try {
-      const resp = await fetch('/exec.js');
+      const resp = await fetch(execJsUrl);
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const code = await resp.text();
       // Evaluate in global scope; wrap to return factory variable if defined.
       factory = (0, eval)(code + '\n; (typeof createExec!=="undefined" ? createExec : undefined);');
-    } catch (e) {
-      throw new Error('Failed to locate Emscripten factory (attempted load + eval): ' + e);
+    } catch (e: any) {
+      throw new Error('Failed to locate Emscripten factory (attempted load + eval): ' + (e?.message || String(e)));
     }
   }
 
   if (!factory) {
-    throw new Error('Emscripten factory still not found. Ensure build used: -s MODULARIZE=1 -s EXPORT_NAME="createExec" and that /exec.js doesn\'t set type="module".');
+    throw new Error(`Emscripten factory still not found. Ensure build used: -s MODULARIZE=1 -s EXPORT_NAME="createExec" and that ${execJsUrl} doesn't set type="module".`);
   }
 
   const Module = await factory({
-    locateFile: (p: string) => (p.endsWith('.wasm') ? '/exec.wasm' : p),
+    locateFile: (p: string) => (p.endsWith('.wasm') ? execWasmUrl : p),
     print: (text: string) => {
       stdoutBuf.push(text);
-      opts.onStdoutLine?.(text);
+      onStdoutLine?.(text);
     },
     printErr: (text: string) => {
       stderrBuf.push(text);
-      opts.onStderrLine?.(text);
+      onStderrLine?.(text);
     }
   });
 

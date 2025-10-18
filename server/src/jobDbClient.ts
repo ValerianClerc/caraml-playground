@@ -12,8 +12,15 @@ type Job = {
   completedAt: Date | null;
   status: 'pending' | 'running' | 'succeeded' | 'failed';
   errorMessage: string | null;
-  artifactInlineWasm: Buffer | null;
-  artifactInlineJs: string | null;
+  artifactJsPath: string | null;
+  artifactWasmPath: string | null;
+  artifactIrPath: string | null;
+}
+
+export type ArtifactPaths = {
+  js: string | null;
+  wasm: string | null;
+  ir: string | null;
 }
 
 export interface IJobDBClient {
@@ -22,8 +29,7 @@ export interface IJobDBClient {
   getJobStatus(jobId: string): Promise<Pick<Job, 'id' | 'status' | 'errorMessage' | 'startedAt' | 'completedAt'>>; // returns job status
   claimJob(): Promise<Pick<Job, 'id' | 'status' | 'sourceCode'> | null>;
   updateJob(jobId: string, job: Partial<Job>): Promise<void>;
-  // setJobArtifacts(jobId: string, jsUrl: string | null, inlineWasm: Buffer | null, inlineJs: string | null): Promise<void>;
-  // getJobArtifacts(jobId: string): Promise<{ jsUrl: string | null; inlineWasm: Buffer | null; inlineJs: string | null }>;
+  getJobArtifacts(jobId: string): Promise<ArtifactPaths>;
 }
 
 class AzurePostGresJobDBClient implements IJobDBClient {
@@ -49,7 +55,7 @@ class AzurePostGresJobDBClient implements IJobDBClient {
       port: process.env.PGPORT ? parseInt(process.env.PGPORT) : 5432,
       database: process.env.PGDATABASE ?? 'postgres',
       password: await this.getToken(),
-      user: process.env.NODE_ENV === "development" ? "valerian.clerc_gmail.com#EXT#@valerianclercgmail.onmicrosoft.co" : "caraml-server",
+      user: process.env.PGUSER ?? "caraml-server",
       ssl: true,
     });
 
@@ -64,8 +70,9 @@ class AzurePostGresJobDBClient implements IJobDBClient {
         'pending','running','succeeded','failed'
       )),
       error_message TEXT,
-      artifact_inline_wasm BYTEA,
-      artifact_inline_js TEXT
+      artifact_js_path TEXT,
+      artifact_wasm_path TEXT,
+      artifact_ir_path TEXT
     )`);
     return Promise.resolve();
   }
@@ -91,8 +98,9 @@ class AzurePostGresJobDBClient implements IJobDBClient {
       updatedAt: 'updated_at',
       createdAt: 'created_at',
       errorMessage: 'error_message',
-      artifactInlineWasm: 'artifact_inline_wasm',
-      artifactInlineJs: 'artifact_inline_js'
+      artifactJsPath: 'artifact_js_path',
+      artifactWasmPath: 'artifact_wasm_path',
+      artifactIrPath: 'artifact_ir_path',
     };
 
     const entries = Object.entries(job).filter(([k, v]) => v !== undefined && k in colMap);
@@ -148,6 +156,19 @@ class AzurePostGresJobDBClient implements IJobDBClient {
     if (res.rowCount === 0) return null;
     const r = res.rows[0];
     return { id: r.id, status: r.status, sourceCode: r.source_code };
+  }
+
+  getJobArtifacts(jobId: string): Promise<ArtifactPaths> {
+    if (!this.pool) throw new Error('DB not initialized');
+    return this.pool.query<ArtifactPaths>(
+      `SELECT artifact_js_path AS "js", artifact_wasm_path AS "wasm", artifact_ir_path AS "ir" FROM jobs WHERE id = $1`,
+      [jobId]
+    ).then(res => {
+      if (res.rowCount === 0) {
+        return { js: null, wasm: null, ir: null };
+      }
+      return res.rows[0];
+    });
   }
 }
 

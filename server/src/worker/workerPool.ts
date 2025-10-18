@@ -1,7 +1,7 @@
 import { Worker } from 'worker_threads';
 import { fileURLToPath } from 'url';
 import path from 'path';
-import type { IJobDBClient } from '../jobDbClient.js'
+import type { ArtifactPaths, IJobDBClient } from '../jobDbClient.js'
 import { promisify } from 'util';
 import { exec } from 'child_process';
 
@@ -75,7 +75,7 @@ export async function startWorkerPool(dbClient: IJobDBClient, opts: WorkerPoolOp
       slot.busy = true;
 
       // send job to worker and wait for result with timeout
-      const result = await new Promise<{ success: boolean; error?: string; id?: string; artifacts?: any }>((resolve) => {
+      const result = await new Promise<{ success: boolean; error?: string; id?: string; artifacts?: ArtifactPaths }>((resolve) => {
         let finished = false;
         const onMessage = (msg: any) => {
           if (finished) return;
@@ -120,7 +120,8 @@ export async function startWorkerPool(dbClient: IJobDBClient, opts: WorkerPoolOp
       });
 
       if (result.success) {
-        await dbClient.updateJob(job.id, { id: job.id, status: 'succeeded', completedAt: new Date() });
+        const { js, wasm, ir } = result.artifacts ?? { js: null, wasm: null, ir: null };
+        await dbClient.updateJob(job.id, { id: job.id, status: 'succeeded', completedAt: new Date(), artifactIrPath: ir, artifactJsPath: js, artifactWasmPath: wasm });
         console.log('[pool] job succeeded', job.id, result.artifacts ? `artifacts=${JSON.stringify(result.artifacts)}` : '');
       } else {
         await dbClient.updateJob(job.id, { id: job.id, status: 'failed', completedAt: new Date(), errorMessage: result.error ?? 'unknown error' });

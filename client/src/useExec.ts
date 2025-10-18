@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { loadExec, ExecModuleHandle, ExecResult, LoadExecOptions } from './execLoader';
+import { loadExec, ExecModuleHandle, LoadExecOptions } from './execLoader';
 
 export interface UseExecOptions extends LoadExecOptions { }
 
-export function useExec(options: UseExecOptions = {}) {
+export function useExec(options: UseExecOptions) {
   const [loading, setLoading] = useState(true);
   const [moduleError, setModuleError] = useState<string | null>(null);
   const execRef = useRef<ExecModuleHandle | null>(null);
@@ -13,9 +13,13 @@ export function useExec(options: UseExecOptions = {}) {
     (async () => {
       try {
         // TODO: find a way to cancel WASM execution?
+        const { execJsUrl, execWasmUrl, onStdoutLine, onStderrLine } = options;
         const exec = await loadExec({
-          onStdoutLine: options.onStdoutLine,
-          onStderrLine: options.onStderrLine
+          onStdoutLine,
+          onStderrLine,
+          execJsUrl,
+          execWasmUrl,
+
         });
         if (!cancelled) {
           execRef.current = exec;

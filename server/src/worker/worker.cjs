@@ -80,6 +80,7 @@ parentPort.on('message', async (job) => {
       '-s', 'INVOKE_RUN=0',
       '-s', 'EXIT_RUNTIME=1',
       '-s', 'ALLOW_MEMORY_GROWTH=1',
+      '-s', 'EXPORTED_RUNTIME_METHODS=["callMain"]',
       RUNTIME_O_PATH,
       '-o', jsFilePath
     ];
@@ -125,7 +126,7 @@ parentPort.on('message', async (job) => {
     success,
     error,
     id: job.id,
-    artifacts: success ? { wasm: wasmFileName, js: jsFileName } : null
+    artifacts: success ? { wasm: wasmFileName, js: jsFileName, ir: null } : null
   });
 });
 
