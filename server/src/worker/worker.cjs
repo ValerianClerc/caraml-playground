@@ -101,6 +101,11 @@ parentPort.on('message', async (job) => {
       credential
     );
     const containerClient = blobServiceClient.getContainerClient('artifacts');
+    const llvmBlockBlobClient = containerClient.getBlockBlobClient(llvmFileName);
+    console.debug(`[worker ${job.id}] Uploading ${llvmFileName}...`);
+    await llvmBlockBlobClient.uploadFile(llvmFilePath, {
+      blobHTTPHeaders: { blobContentType: 'text/plain' },
+    });
     const wasmBlockBlobClient = containerClient.getBlockBlobClient(wasmFileName);
     console.debug(`[worker ${job.id}] Uploading ${wasmFileName}...`);
     await wasmBlockBlobClient.uploadFile(wasmFilePath, {
@@ -126,7 +131,7 @@ parentPort.on('message', async (job) => {
     success,
     error,
     id: job.id,
-    artifacts: success ? { wasm: wasmFileName, js: jsFileName, ir: null } : null
+    artifacts: success ? { wasm: wasmFileName, js: jsFileName, ir: llvmFileName } : null
   });
 });
 
