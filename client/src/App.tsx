@@ -1,5 +1,5 @@
-import { ExecDemo } from './ExecDemo'
-import { CodeEditor } from './CodeEditor'
+import { ExecDemo } from './components/ExecDemo'
+import { CodeEditor } from './components/CodeEditor'
 import { useRunUpdateCoordinator } from './runUpdates/useRunUpdateCoordinator'
 
 export default function App() {

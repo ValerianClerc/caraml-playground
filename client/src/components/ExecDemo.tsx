@@ -1,8 +1,12 @@
 import { useState } from 'react';
-import { useExec } from './exec/useExec';
-import { API_URL } from './constants';
+import { useExec } from '../exec/useExec';
+import { API_URL } from '../constants';
+import { useAppState } from '../state';
 
 export function ExecDemo() {
+  const currentRunId = useAppState(s => s.currentRunId);
+  const runs = useAppState(s => s.runs);
+  const currentRun = currentRunId ? runs[currentRunId] : undefined;
   const [stdoutLive, setStdoutLive] = useState<string[]>([]);
   const [stderrLive, setStderrLive] = useState<string[]>([]);
   const [exitCode, setExitCode] = useState<number | null>(null);
@@ -13,8 +17,8 @@ export function ExecDemo() {
   const { loading, error, run } = useExec({
     onStdoutLine: (line) => setStdoutLive(prev => [...prev, line]),
     onStderrLine: (line) => setStderrLive(prev => [...prev, line]),
-    execJsUrl: `${API_URL}/artifacts/c75400f7-6cbf-46ce-a69b-c7bc4def8d31/js`,
-    execWasmUrl: `${API_URL}/artifacts/c75400f7-6cbf-46ce-a69b-c7bc4def8d31/wasm`
+    execJsUrl: `${API_URL}/artifacts/${currentRunId}/js`,
+    execWasmUrl: `${API_URL}/artifacts/${currentRunId}/wasm`
   });
 
   const handleRun = async () => {
@@ -34,12 +38,14 @@ export function ExecDemo() {
     }
   };
 
+  if (!currentRunId) return <p>No run selected. Submit code, or view an existing run.</p>;
   if (loading) return <p>Loading executable...</p>;
   if (error) return <p style={{ color: 'crimson' }}>Load error: {error}</p>;
 
   return (
     <div style={{ marginTop: 24 }}>
       <h2>Run Executable</h2>
+      <code>{currentRun?.code}</code>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <button disabled={running} onClick={handleRun}>
           {running ? 'Running…' : 'Run'}

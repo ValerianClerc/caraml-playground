@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
-import { factorial } from "./codeSamples";
-import { queueCompilation } from "./api";
-import { useAppState } from "./state";
+import { factorial } from "../codeSamples";
+import { queueCompilation } from "../api";
+import { useAppState } from "../state";
 
 export const CodeEditor = () => {
   const [code, setCode] = useState(factorial);

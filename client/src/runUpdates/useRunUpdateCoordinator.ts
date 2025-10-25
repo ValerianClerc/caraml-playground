@@ -14,13 +14,15 @@ export function useRunUpdateCoordinator() {
       fetchRunStatus,
       autoUntrackResolved: true,
     });
-    sourceRef.current.onUpdate(updated => {
+  }
+  useEffect(() => {
+    sourceRef.current?.onUpdate(updated => {
       updated.forEach(r => {
         const existing = runs[r.id];
         addOrUpdateRun({ ...existing, ...r });
       });
     });
-  }
+  }, [runs]);
 
   // Update tracked IDs whenever run map changes
   useEffect(() => {
