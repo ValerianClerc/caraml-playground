@@ -1,22 +1,24 @@
 import { useCallback, useState } from "react";
 import { factorial } from "./codeSamples";
-import { API_URL } from "./constants";
+import { queueCompilation } from "./api";
+import { useAppState } from "./state";
 
 export const CodeEditor = () => {
   const [code, setCode] = useState(factorial);
+  const setCurrentRunId = useAppState(state => state.setCurrentRunId);
+  const addOrUpdateRun = useAppState(state => state.addOrUpdateRun);
 
-  const handleSubmit = useCallback(() => {
-    console.log("Submitted code:", code);
+  const handleSubmit = useCallback(async () => {
+    queueCompilation(code)
+      .then(response => {
 
-    fetch(`${API_URL}/compile`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        sourceCode: code
-      }),
-    });
+        addOrUpdateRun({ id: response.jobId, code, status: response.status });
+        setCurrentRunId(response.jobId);
+        console.log('Compilation queued, job ID:', response.jobId);
+      })
+      .catch(error => {
+        console.error('Error queueing compilation:', error);
+      });
   }, [code]);
 
   return (
@@ -26,7 +28,6 @@ export const CodeEditor = () => {
         value={code}
         onChange={(e) => setCode(e.target.value)}
         style={{ width: '100%', height: 300, fontFamily: 'monospace', fontSize: 14 }}
-        defaultValue={factorial}
       />
       <button onClick={handleSubmit}>Submit Code</button>
     </div>
