@@ -1,15 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { Run } from "./interfaces";
 
-export const RUN_STATUSES = ['pending', 'running', 'succeeded', 'failed'] as const;
-
-type RunStatus = typeof RUN_STATUSES[number];
-
-type Run = {
-  id: string;
-  code: string;
-  status: RunStatus;
-};
 
 interface AppState {
   runs: Record<string, Run>;

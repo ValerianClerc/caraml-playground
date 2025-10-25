@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useExec } from './useExec';
+import { useExec } from './exec/useExec';
 import { API_URL } from './constants';
 
 export function ExecDemo() {

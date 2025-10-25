@@ -12,9 +12,9 @@ export const CodeEditor = () => {
     queueCompilation(code)
       .then(response => {
 
-        addOrUpdateRun({ id: response.jobId, code, status: response.status });
-        setCurrentRunId(response.jobId);
-        console.log('Compilation queued, job ID:', response.jobId);
+        addOrUpdateRun({ id: response.id, code, status: response.status });
+        setCurrentRunId(response.id);
+        console.log('Compilation queued, job ID:', response.id);
       })
       .catch(error => {
         console.error('Error queueing compilation:', error);
