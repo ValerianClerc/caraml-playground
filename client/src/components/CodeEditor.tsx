@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { factorial } from "../codeSamples";
 import { queueCompilation } from "../api";
 import { useAppState } from "../state";
+import { ExampleSelector } from "./ExampleSelector";
 
 export const CodeEditor = () => {
   const [code, setCode] = useState(factorial);
@@ -21,9 +22,14 @@ export const CodeEditor = () => {
       });
   }, [code]);
 
+  const onExampleSelected = useCallback((exampleCode: string) => {
+    setCode(exampleCode);
+  }, []);
+
   return (
     <div>
       <h2>Code Editor</h2>
+      <ExampleSelector onExampleSelected={onExampleSelected} />
       <textarea
         value={code}
         onChange={(e) => setCode(e.target.value)}

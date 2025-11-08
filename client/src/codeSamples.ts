@@ -27,5 +27,5 @@ export const codeSamples = [
   { name: 'Function call', code: functionCall },
   { name: 'If statement', code: simpleIf },
   { name: 'Factorial', code: factorial },
-  { name: 'Fibonacci', code: fibonacci },
+  // { name: 'Fibonacci', code: fibonacci }, // TODO: re-enable when test case is fixed: https://github.com/ValerianClerc/caraml/issues/12
 ];
