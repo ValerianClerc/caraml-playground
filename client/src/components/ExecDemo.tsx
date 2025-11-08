@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useExec } from '../exec/useExec';
 import { API_URL } from '../constants';
 import { useAppState } from '../state';
@@ -21,6 +21,17 @@ export function ExecDemo() {
     execWasmUrl: `${API_URL}/artifacts/${currentRunId}/wasm`
   });
 
+  useEffect(() => {
+    // clear last exec state state when currentRunId changes
+    return () => {
+      setStderrLive([]);
+      setStdoutLive([]);
+      setFinalStderr('');
+      setFinalStdout('');
+      setExitCode(null);
+    }
+  }, [currentRunId])
+
   const handleRun = async () => {
     setRunning(true);
     setExitCode(null);
@@ -39,6 +50,7 @@ export function ExecDemo() {
   };
 
   if (!currentRunId) return <p>No run selected. Submit code, or view an existing run.</p>;
+  if (currentRun?.status !== "succeeded") return <p>Compilation status is "{currentRun?.status}". Executable artifacts are only available for succeeded runs.</p>;
   if (loading) return <p>Loading executable...</p>;
   if (error) return <p style={{ color: 'crimson' }}>Load error: {error}</p>;
 
@@ -57,16 +69,20 @@ export function ExecDemo() {
 
       <div style={{ display: 'flex', gap: 16, marginTop: 20 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h3 style={{ margin: '4px 0' }}>stdout (live)</h3>
-          <pre style={panelStyle}>
-            {stdoutLive.length ? stdoutLive.join('\n') : '(empty)'}
-          </pre>
+          <details>
+            <summary style={{ cursor: 'pointer' }}>stdout (live)</summary>
+            <pre style={panelStyle}>
+              {stdoutLive.length ? stdoutLive.join('\n') : '(empty)'}
+            </pre>
+          </details>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h3 style={{ margin: '4px 0' }}>stderr (live)</h3>
-          <pre style={{ ...panelStyle, background: '#fef2f2', color: '#991b1b' }}>
-            {stderrLive.length ? stderrLive.join('\n') : '(empty)'}
-          </pre>
+          <details>
+            <summary style={{ cursor: 'pointer' }}>stderr (live)</summary>
+            <pre style={{ ...panelStyle, background: '#fef2f2', color: '#991b1b' }}>
+              {stderrLive.length ? stderrLive.join('\n') : '(empty)'}
+            </pre>
+          </details>
         </div>
       </div>
 

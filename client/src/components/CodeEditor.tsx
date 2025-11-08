@@ -29,7 +29,7 @@ export const CodeEditor = () => {
         onChange={(e) => setCode(e.target.value)}
         style={{ width: '100%', height: 300, fontFamily: 'monospace', fontSize: 14 }}
       />
-      <button onClick={handleSubmit}>Submit Code</button>
+      <button onClick={handleSubmit}>Compile Code</button>
     </div>
   );
 }
