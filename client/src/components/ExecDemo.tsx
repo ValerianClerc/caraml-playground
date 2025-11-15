@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useExec } from '../exec/useExec';
 import { API_URL } from '../constants';
 import { useAppState } from '../state';
+import { Button } from './retroui/Button';
 
 export function ExecDemo() {
   const currentRunId = useAppState(s => s.currentRunId);
@@ -50,6 +51,7 @@ export function ExecDemo() {
   };
 
   if (!currentRunId) return <p>No run selected. Submit code, or view an existing run.</p>;
+  if (currentRun?.status === "failed") return <p>Compilation failed with error: {currentRun?.errorMessage}</p>;
   if (currentRun?.status !== "succeeded") return <p>Compilation status is "{currentRun?.status}". Executable artifacts are only available for succeeded runs.</p>;
   if (loading) return <p>Loading executable...</p>;
   if (error) return <p style={{ color: 'crimson' }}>Load error: {error}</p>;
@@ -59,9 +61,9 @@ export function ExecDemo() {
       <h2>Run Executable</h2>
       <code>{currentRun?.code}</code>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button disabled={running} onClick={handleRun}>
+        <Button disabled={running} onClick={handleRun}>
           {running ? 'Running…' : 'Run'}
-        </button>
+        </Button>
         {exitCode !== null && (
           <span style={{ fontFamily: 'monospace' }}>exit={exitCode}</span>
         )}
