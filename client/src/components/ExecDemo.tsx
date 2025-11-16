@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useExec } from '../exec/useExec';
 import { API_URL } from '../constants';
 import { useAppState } from '../state';
+import { Button } from './retroui/Button';
 
 export function ExecDemo() {
   const currentRunId = useAppState(s => s.currentRunId);
@@ -50,6 +51,7 @@ export function ExecDemo() {
   };
 
   if (!currentRunId) return <p>No run selected. Submit code, or view an existing run.</p>;
+  if (currentRun?.status === "failed") return <p>Compilation failed with error: {currentRun?.errorMessage}</p>;
   if (currentRun?.status !== "succeeded") return <p>Compilation status is "{currentRun?.status}". Executable artifacts are only available for succeeded runs.</p>;
   if (loading) return <p>Loading executable...</p>;
   if (error) return <p style={{ color: 'crimson' }}>Load error: {error}</p>;
@@ -59,9 +61,9 @@ export function ExecDemo() {
       <h2>Run Executable</h2>
       <code>{currentRun?.code}</code>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button disabled={running} onClick={handleRun}>
+        <Button disabled={running} onClick={handleRun}>
           {running ? 'Running…' : 'Run'}
-        </button>
+        </Button>
         {exitCode !== null && (
           <span style={{ fontFamily: 'monospace' }}>exit={exitCode}</span>
         )}
@@ -71,7 +73,7 @@ export function ExecDemo() {
         <div style={{ flex: 1, minWidth: 0 }}>
           <details>
             <summary style={{ cursor: 'pointer' }}>stdout (live)</summary>
-            <pre style={panelStyle}>
+            <pre >
               {stdoutLive.length ? stdoutLive.join('\n') : '(empty)'}
             </pre>
           </details>
@@ -79,7 +81,7 @@ export function ExecDemo() {
         <div style={{ flex: 1, minWidth: 0 }}>
           <details>
             <summary style={{ cursor: 'pointer' }}>stderr (live)</summary>
-            <pre style={{ ...panelStyle, background: '#fef2f2', color: '#991b1b' }}>
+            <pre >
               {stderrLive.length ? stderrLive.join('\n') : '(empty)'}
             </pre>
           </details>
@@ -91,25 +93,14 @@ export function ExecDemo() {
           <h3 style={{ margin: '4px 0' }}>Final Result</h3>
           <details open>
             <summary style={{ cursor: 'pointer' }}>stdout</summary>
-            <pre style={panelStyle}>{finalStdout || '(empty)'}</pre>
+            <pre >{finalStdout || '(empty)'}</pre>
           </details>
           <details>
             <summary style={{ cursor: 'pointer' }}>stderr</summary>
-            <pre style={{ ...panelStyle, background: '#fef2f2', color: '#991b1b' }}>{finalStderr || '(empty)'}</pre>
+            <pre >{finalStderr || '(empty)'}</pre>
           </details>
         </div>
       )}
     </div>
   );
 }
-
-const panelStyle: React.CSSProperties = {
-  background: '#f1f5f9',
-  padding: 8,
-  minHeight: 120,
-  whiteSpace: 'pre-wrap',
-  fontSize: 13,
-  overflowY: 'auto',
-  border: '1px solid #e2e8f0',
-  borderRadius: 4
-};

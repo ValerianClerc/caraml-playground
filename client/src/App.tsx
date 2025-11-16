@@ -6,7 +6,7 @@ import { RunSelector } from './components/RunSelector';
 export default function App() {
   useRunUpdateCoordinator();
   return (
-    <div style={{ fontFamily: 'system-ui, -apple-system, Roboto, "Segoe UI", sans-serif', padding: 24 }}>
+    <div>
       <CodeEditor />
       <RunSelector />
       <ExecDemo />

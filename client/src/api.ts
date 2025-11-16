@@ -28,14 +28,14 @@ export const queueCompilation = async (sourceCode: string): Promise<QueueCompila
 const FetchRunStatusResponse = z.object({
   id: z.string(),
   status: z.enum(RUN_STATUSES),
-  errorMessage: z.string().nullable().optional(),
-  startedAt: z.string().nullable().optional(),
-  completedAt: z.string().nullable().optional(),
+  error_message: z.string().nullable().optional(),
+  started_at: z.string().nullable().optional(),
+  completed_at: z.string().nullable().optional(),
 });
 type FetchRunStatusResponse = z.infer<typeof FetchRunStatusResponse>;
 
 export async function fetchRunStatus(id: string): Promise<FetchRunStatusResponse> {
   const res = await fetch(`${API_URL}/job-status/${id}`);
-  if (!res.ok) return { id, status: 'failed', errorMessage: 'Failed to fetch run status', startedAt: undefined, completedAt: undefined };
+  if (!res.ok) return { id, status: 'failed', error_message: 'Failed to fetch run status', started_at: undefined, completed_at: undefined };
   return FetchRunStatusResponse.parse(await res.json());
 }
