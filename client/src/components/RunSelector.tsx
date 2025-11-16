@@ -16,19 +16,8 @@ export const RunSelector = () => {
   }, [setCurrentRunId]);
 
   return (
-    <div style={{ marginTop: 24 }}>
+    <div >
       <h2>Select Run</h2>
-      {/* <select
-        value={currentRunId ?? ''}
-        onChange={(e) => setCurrentRunId(e.target.value)}
-      >
-        <option value=''>-- Select a run --</option>
-        {Object.values(runs).map(run => (
-          <option key={run.id} value={run.id}>
-            {run.id} - {run.status}
-          </option>
-        ))}
-      </select> */}
       <Select onValueChange={onValueChange} value={currentRunId ?? ''}>
         <Select.Trigger>
           <Select.Value placeholder="-- Select a run --" />
@@ -36,7 +25,6 @@ export const RunSelector = () => {
         <Select.Content>
           <Select.Item value="none">-- Select a run --</Select.Item>
           {Object.values(runs).map(run => (
-            // TODO: move onSelect to Select root
             <Select.Item
               key={run.id}
               value={run.id}
