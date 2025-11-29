@@ -29,15 +29,16 @@ export const CodeEditor = () => {
   }, []);
 
   return (
-    <div>
-      <h2>Code Editor</h2>
-      <ExampleSelector onExampleSelected={onExampleSelected} />
+    <div className="flex flex-col justify-between h-full">
+      <div className="flex items-center gap-2 flex-none justify-between pb-2">
+        <ExampleSelector onExampleSelected={onExampleSelected} />
+        <Button className="h-fit" variant="default" onClick={handleSubmit}>Compile Code</Button>
+      </div>
       <Textarea
+        className="flex-1 min-h-0 font-mono"
         value={code}
         onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setCode(e.target.value)}
-        style={{ width: '100%', height: 300, fontFamily: 'monospace', fontSize: 14 }}
       />
-      <Button variant="default" onClick={handleSubmit}>Compile Code</Button>
     </div>
   );
 }

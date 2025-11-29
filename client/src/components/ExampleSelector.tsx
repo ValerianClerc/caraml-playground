@@ -26,7 +26,6 @@ export const ExampleSelector = ({ onExampleSelected }: Props) => {
 
   return (
     <div>
-      <h2>Select Example</h2>
       <Select value={selectedName ?? ""} onValueChange={onValueChange}>
         <Select.Trigger>
           <Select.Value placeholder="-- Select an example --" />

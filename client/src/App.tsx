@@ -1,15 +1,11 @@
-import { ExecDemo } from './components/ExecDemo'
-import { CodeEditor } from './components/CodeEditor'
 import { useRunUpdateCoordinator } from './runUpdates/useRunUpdateCoordinator'
-import { RunSelector } from './components/RunSelector';
+import { CodeEditorLayout } from './pages/CodeEditorLayout';
 
 export default function App() {
   useRunUpdateCoordinator();
   return (
-    <div>
-      <CodeEditor />
-      <RunSelector />
-      <ExecDemo />
+    <div className='h-screen'>
+      <CodeEditorLayout />
     </div>
   )
 }
