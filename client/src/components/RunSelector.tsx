@@ -28,7 +28,7 @@ export const RunSelector = () => {
               key={run.id}
               value={run.id}
             >
-              Run #{index} - {run.status}
+              Compilation #{index} - {run.status}
             </Select.Item>
           ))}
         </Select.Content>
