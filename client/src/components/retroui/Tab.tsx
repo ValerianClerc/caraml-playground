@@ -9,6 +9,7 @@ import {
   TabPanels,
   TabProps,
 } from "@headlessui/react";
+import { Tooltip } from "./Tooltip";
 
 const Tabs = TabGroup;
 const TabsPanels = TabPanels;
@@ -30,12 +31,19 @@ const TabsTriggerList = ({
 
 interface ITabsTrigger extends TabProps {
   className?: string;
+  disabledText?: string;
 }
-const TabsTrigger = ({ children, className, ...props }: ITabsTrigger) => {
-  return (
+const TabsTrigger = ({ children, className, disabledText, ...props }: ITabsTrigger) => {
+  const triggerEl = (
     <Tab
       className={cn(
-        "px-4 py-1 border-2 border-transparent data-selected:border-border data-selected:bg-primary data-selected:text-primary-foreground data-selected:font-semibold focus:outline-hidden",
+        "px-4 py-1 border-2 border-transparent focus:outline-hidden transition-colors",
+        // hover state when not selected
+        "hover:border-border hover:bg-muted",
+        // selected state
+        "data-selected:border-border data-selected:bg-primary data-selected:text-primary-foreground data-selected:font-semibold",
+        // disabled state
+        "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-transparent",
         className,
       )}
       {...props}
@@ -43,6 +51,19 @@ const TabsTrigger = ({ children, className, ...props }: ITabsTrigger) => {
       {children}
     </Tab>
   );
+
+  if (props.disabled && disabledText) {
+    return (
+      <Tooltip>
+        <Tooltip.Trigger asChild>
+          {triggerEl}
+        </Tooltip.Trigger>
+        <Tooltip.Content>{disabledText}</Tooltip.Content>
+      </Tooltip>
+    );
+  }
+
+  return triggerEl;
 };
 
 interface ITabsContent extends TabPanelProps {
