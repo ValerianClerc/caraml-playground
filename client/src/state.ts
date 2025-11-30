@@ -34,3 +34,5 @@ export const useAppState = create<AppState>()(
     }
   )
 );
+
+export const selectCurrentRun = (state: AppState) => state.currentRunId ? state.runs[state.currentRunId] : undefined

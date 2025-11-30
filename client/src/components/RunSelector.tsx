@@ -16,20 +16,19 @@ export const RunSelector = () => {
   }, [setCurrentRunId]);
 
   return (
-    <div >
-      <h2>Select Run</h2>
-      <Select onValueChange={onValueChange} value={currentRunId ?? ''}>
-        <Select.Trigger>
+    <div className="w-100">
+      <Select onValueChange={onValueChange} value={currentRunId ?? ''} >
+        <Select.Trigger className='min-w-60'>
           <Select.Value placeholder="-- Select a run --" />
         </Select.Trigger>
         <Select.Content>
           <Select.Item value="none">-- Select a run --</Select.Item>
-          {Object.values(runs).map(run => (
+          {Object.values(runs).map((run, index) => (
             <Select.Item
               key={run.id}
               value={run.id}
             >
-              {run.id} - {run.status}
+              Compilation #{index} - {run.status}
             </Select.Item>
           ))}
         </Select.Content>

@@ -4,16 +4,16 @@ import React, { ButtonHTMLAttributes } from "react";
 import { Slot } from "@radix-ui/react-slot";
 
 const buttonVariants = cva(
-  "font-head transition-all rounded outline-hidden cursor-pointer duration-200 font-medium flex items-center",
+  "font-head transition-all rounded outline-hidden cursor-pointer duration-200 font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed",
   {
     variants: {
       variant: {
         default:
-          "shadow-md hover:shadow active:shadow-none bg-primary text-primary-foreground border-2 border-black transition hover:translate-y-1 active:translate-y-2 active:translate-x-1 hover:bg-primary-hover",
+          "shadow-md hover:shadow active:shadow-none bg-primary text-primary-foreground border-2 border-black transition hover:translate-y-1 active:translate-y-2 active:translate-x-1 hover:bg-primary-hover disabled:hover:translate-y-0 disabled:active:translate-y-0 disabled:active:translate-x-0",
         secondary:
-          "shadow-md hover:shadow active:shadow-none bg-secondary shadow-primary text-secondary-foreground border-2 border-black transition hover:translate-y-1 active:translate-y-2 active:translate-x-1 hover:bg-secondary-hover",
+          "shadow-md hover:shadow active:shadow-none bg-secondary shadow-primary text-secondary-foreground border-2 border-black transition hover:translate-y-1 active:translate-y-2 active:translate-x-1 hover:bg-secondary-hover disabled:hover:translate-y-0 disabled:active:translate-y-0 disabled:active:translate-x-0",
         outline:
-          "shadow-md hover:shadow active:shadow-none bg-transparent border-2 transition hover:translate-y-1 active:translate-y-2 active:translate-x-1",
+          "shadow-md hover:shadow active:shadow-none bg-transparent border-2 transition hover:translate-y-1 active:translate-y-2 active:translate-x-1 disabled:hover:translate-y-0 disabled:active:translate-y-0 disabled:active:translate-x-0",
         link: "bg-transparent hover:underline",
       },
       size: {
@@ -32,7 +32,7 @@ const buttonVariants = cva(
 
 export interface IButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 
@@ -44,6 +44,7 @@ export const Button = React.forwardRef<HTMLButtonElement, IButtonProps>(
       className = "",
       variant = "default",
       asChild = false,
+      disabled,
       ...props
     }: IButtonProps,
     forwardedRef,
@@ -53,6 +54,7 @@ export const Button = React.forwardRef<HTMLButtonElement, IButtonProps>(
       <Comp
         ref={forwardedRef}
         className={cn(buttonVariants({ variant, size }), className)}
+        disabled={disabled}
         {...props}
       >
         {children}
