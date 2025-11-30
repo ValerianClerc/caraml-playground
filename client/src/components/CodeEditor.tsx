@@ -34,13 +34,13 @@ export const CodeEditor = () => {
   const compileButtonContent = isCompiling ? <Loader className="p-1" /> : "Compile Code"
 
   return (
-    <div className="flex flex-col justify-between h-full">
-      <div className="flex items-center gap-2 flex-none justify-between pb-2">
+    <div className="flex flex-col h-full gap-2">
+      <div className="flex items-center gap-2 flex-none justify-between">
         <ExampleSelector onExampleSelected={onExampleSelected} />
         <Button className="h-10" variant="default" onClick={handleSubmit} disabled={isCompiling}>{compileButtonContent}</Button>
       </div>
       <Textarea
-        className="flex-1 min-h-0 font-mono"
+        className="flex-1 min-h-0 font-mono bg-(--card)"
         value={code}
         onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setCode(e.target.value)}
       />

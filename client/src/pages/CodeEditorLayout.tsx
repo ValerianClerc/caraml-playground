@@ -1,5 +1,5 @@
 import { CodeEditor } from "@/components/CodeEditor";
-import { ExecDemo } from "@/components/ExecDemo";
+import { ExecSidePanel } from "@/components/side-panel/ExecSidePanel";
 import { RunSelector } from "@/components/RunSelector";
 
 export const CodeEditorLayout = () => {
@@ -8,9 +8,9 @@ export const CodeEditorLayout = () => {
       <div className="w-3/5">
         <CodeEditor />
       </div>
-      <div className="w-2/5">
+      <div className="w-2/5 flex flex-col gap-2">
         <RunSelector />
-        <ExecDemo />
+        <ExecSidePanel />
       </div>
     </div>
   );
