@@ -1,6 +1,7 @@
 import { selectCurrentRun, useAppState } from "@/state";
 import { Text } from "@/components/retroui/Text";
 import { Button } from "@/components/retroui/Button";
+import { Code } from "../Code";
 
 export const CompilationTab = () => {
   const currentRun = useAppState(selectCurrentRun)
@@ -26,7 +27,7 @@ export const CompilationTab = () => {
     {currentRun?.code && (
       <>
         <Text as="h5">Source code:</Text>
-        <code className="block whitespace-pre-wrap font-mono text-sm border-2 border-border rounded p-2">{currentRun?.code.trim()}</code>
+        <Code>{currentRun?.code.trim()}</Code>
       </>
     )}
   </div>
