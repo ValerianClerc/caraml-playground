@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { loadExec, ExecModuleHandle, LoadExecOptions } from './execLoader';
 
+export type RunFunc = (args?: string[]) => Promise<{ exitCode: number; stdout: string; stderr: string }>;
 export interface UseExecOptions extends Omit<LoadExecOptions, 'onStdoutLine' | 'onStderrLine'> { }
 export interface UseExecReturn {
   loading: boolean;
   error: string | null;
-  run: (args?: string[]) => Promise<{ exitCode: number; stdout: string; stderr: string }>;
+  run: RunFunc;
   clear: () => void;
   stdout: string;
   stderr: string;

@@ -9,7 +9,7 @@ import { API_URL } from "@/constants";
 
 export const ExecSidePanel = () => {
   const currentRun = useAppState(selectCurrentRun)
-  const [selectedTabIndex, setSelectedTabIndex] = useState<number | undefined>(0);
+  const [selectedTabIndex, setSelectedTabIndex] = useState<number>(0);
 
   const execState = useExec({
     execJsUrl: `${API_URL}/artifacts/${currentRun?.id}/js`,
@@ -18,7 +18,7 @@ export const ExecSidePanel = () => {
 
   useEffect(() => {
     // if current tab is IR or Execution, and currentRun becomes invalid, switch to Compilation tab
-    if (selectedTabIndex && selectedTabIndex > 0) {
+    if (selectedTabIndex > 0) {
       if (!currentRun || currentRun.status !== "succeeded") {
         setSelectedTabIndex(0);
       }
@@ -39,7 +39,7 @@ export const ExecSidePanel = () => {
         </TabsTriggerList>
         <TabsPanels>
           <TabsContent>
-            <CompilationTab />
+            <CompilationTab run={execState.run} navigateToExecTab={() => setSelectedTabIndex(2)} />
           </TabsContent>
           <TabsContent>
             IR tab (TODO)

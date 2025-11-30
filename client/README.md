@@ -9,3 +9,9 @@ Quick start:
 3. npm run dev
 
 It uses Vite and React 18.
+
+
+## TODOs:
+- [ ] CSP since we're loading scripts from blob storage
+- [ ] Surface compilation errors to stderr, surface exit code
+- [ ] Add LLVM IR viewer panel

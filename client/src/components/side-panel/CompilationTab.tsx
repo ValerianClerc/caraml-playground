@@ -2,9 +2,21 @@ import { selectCurrentRun, useAppState } from "@/state";
 import { Text } from "@/components/retroui/Text";
 import { Button } from "@/components/retroui/Button";
 import { Code } from "../Code";
+import { useCallback } from "react";
+import { RunFunc } from "@/exec/useExec";
 
-export const CompilationTab = () => {
+type Props = {
+  run: RunFunc;
+  navigateToExecTab: () => void;
+}
+
+export const CompilationTab = ({ run, navigateToExecTab }: Props) => {
   const currentRun = useAppState(selectCurrentRun)
+
+  const onRunClick = useCallback(() => {
+    run();
+    navigateToExecTab();
+  }, [run, navigateToExecTab]);
 
   let message = '';
   let statusColor = '';
@@ -30,5 +42,7 @@ export const CompilationTab = () => {
         <Code>{currentRun?.code.trim()}</Code>
       </>
     )}
+
+    <Button className="w-fit self-end" onClick={onRunClick}>Run</Button>
   </div>
 }

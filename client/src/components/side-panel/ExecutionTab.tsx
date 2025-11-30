@@ -11,10 +11,10 @@ export const ExecutionTab = ({ run, error, loading, stdout, stderr }: Props) => 
   if (error) return <div className="text-red-600">Load error: {error}</div>
 
   return <div className="gap-2 flex flex-col">
-    <Button className="w-fit" onClick={() => run()} disabled={loading}>{loading ? "Loading..." : "Run"}</Button>
     <h3>Stdout</h3>
     <Code>{stdout || "\n"}</Code>
     <h3>Stderr</h3>
     <Code>{stderr || "\n"}</Code>
+    <Button className="w-fit self-end" onClick={() => run()} disabled={loading}>{loading ? "Loading..." : "Run"}</Button>
   </div>
 }
