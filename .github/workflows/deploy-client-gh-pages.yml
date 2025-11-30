@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - deploy-client
     paths:
       - 'client/**'
       - '.github/workflows/deploy-client-gh-pages.yml'
