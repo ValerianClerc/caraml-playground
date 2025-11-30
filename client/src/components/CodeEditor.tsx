@@ -31,7 +31,7 @@ export const CodeEditor = () => {
   }, []);
 
   const isCompiling = currentRun?.status === "pending" || currentRun?.status === "running"
-  const compileButtonContent = isCompiling ? <Loader className="p-1" /> : "Compile Code"
+  const compileButtonContent = isCompiling ? <Loader className="p-1" /> : "Compile"
 
   return (
     <div className="flex flex-col h-full gap-2">
