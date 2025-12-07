@@ -1,0 +1,49 @@
+name: Trigger auto deployment for caraml-server
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - '**'
+    - '.github/workflows/caraml-server-AutoDeployTrigger-1fa4a179-0a49-457f-97a7-fffa9feb8a29.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:      
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions: 
+      id-token: write #This is required for requesting the OIDC JWT Token
+      contents: read #Required when GH token is used to authenticate with private repo
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.CARAMLSERVER_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.CARAMLSERVER_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.CARAMLSERVER_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }}/server
+          _dockerfilePathKey_: _dockerfilePath_
+          _targetLabelKey_: _targetLabel_
+          registryUrl: registry.hub.docker.com
+          registryUsername: ${{ secrets.CARAMLSERVER_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.CARAMLSERVER_REGISTRY_PASSWORD }}
+          containerAppName: caraml-server
+          resourceGroup: caraml
+          imageToBuild: registry.hub.docker.com/caraml-server:${{ github.sha }}
+          _buildArgumentsKey_: |
+            _buildArgumentsValues_
+
+
