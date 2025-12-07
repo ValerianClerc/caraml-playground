@@ -10,16 +10,17 @@ console.log('Starting server...');
 const app = new Hono();
 
 // Simple CORS middleware: allow an origin from env or default to Vite dev server
-const DEFAULT_CLIENT_ORIGIN = 'http://localhost:5173';
-const allowedOrigin = process.env.CORS_ORIGIN || DEFAULT_CLIENT_ORIGIN;
+const DEFAULT_CLIENT_ORIGINS = ['http://localhost:5173', 'https://playground.caraml.valerianclerc.com'];
+const envOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [];
+const allowedOrigins = [...DEFAULT_CLIENT_ORIGINS, ...envOrigins];
 
 app.use('*', async (c, next) => {
   const origin = c.req.header('origin') || '';
   // If the request has an Origin header and it matches allowedOrigin, echo it back.
-  if (origin && (origin === allowedOrigin || allowedOrigin === '*')) {
-    c.header('Access-Control-Allow-Origin', origin === '' ? allowedOrigin : origin);
-  } else if (!origin && allowedOrigin === '*') {
+  if (allowedOrigins.includes('*')) {
     c.header('Access-Control-Allow-Origin', '*');
+  } else if (origin && allowedOrigins.includes(origin)) {
+    c.header('Access-Control-Allow-Origin', origin);
   }
 
   const corsHeaders: Record<string, string> = {
@@ -35,8 +36,10 @@ app.use('*', async (c, next) => {
   if (c.req.method === 'OPTIONS') {
     const preflightHeaders: Record<string, string> = {};
     // include the Access-Control-Allow-Origin from previously set header if present
-    const acaOrigin = c.res.headers.get('Access-Control-Allow-Origin') || allowedOrigin;
-    preflightHeaders['Access-Control-Allow-Origin'] = acaOrigin;
+    const acaOrigin = c.res.headers.get('Access-Control-Allow-Origin');
+    if (acaOrigin) {
+      preflightHeaders['Access-Control-Allow-Origin'] = acaOrigin;
+    }
     Object.assign(preflightHeaders, corsHeaders);
     return new Response(null, { status: 204, headers: preflightHeaders });
   }
