@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ExecutionTab } from "./ExecutionTab";
 import { useExec } from "@/exec/useExec";
 import { API_URL } from "@/constants";
+import { IRTab } from "./IRTab";
 
 export const ExecSidePanel = () => {
   const currentRun = useAppState(selectCurrentRun)
@@ -41,8 +42,8 @@ export const ExecSidePanel = () => {
           <TabsContent>
             <CompilationTab run={execState.run} navigateToExecTab={() => setSelectedTabIndex(2)} />
           </TabsContent>
-          <TabsContent>
-            IR tab (TODO)
+          <TabsContent className="p-0">
+            <IRTab />
           </TabsContent>
           <TabsContent>
             <ExecutionTab {...execState} />

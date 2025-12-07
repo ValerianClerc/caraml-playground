@@ -39,3 +39,11 @@ export async function fetchRunStatus(id: string): Promise<FetchRunStatusResponse
   if (!res.ok) return { id, status: 'failed', error_message: 'Failed to fetch run status', started_at: undefined, completed_at: undefined };
   return FetchRunStatusResponse.parse(await res.json());
 }
+
+export async function fetchArtifact(id: string, ext: 'js' | 'wasm' | 'ir'): Promise<string> {
+  const res = await fetch(`${API_URL}/artifacts/${id}/${ext}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch artifact: ${res.statusText}`);
+  }
+  return res.text();
+}
