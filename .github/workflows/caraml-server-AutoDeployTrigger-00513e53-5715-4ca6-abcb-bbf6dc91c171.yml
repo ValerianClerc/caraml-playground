@@ -42,7 +42,7 @@ jobs:
           registryPassword: ${{ secrets.CARAMLSERVER_REGISTRY_PASSWORD }}
           containerAppName: caraml-server
           resourceGroup: caraml
-          imageToBuild: docker.com/caraml-server:${{ github.sha }}
+          imageToBuild: docker.com/vclerc/caraml-server:${{ github.sha }}
           _buildArgumentsKey_: |
             _buildArgumentsValues_
 
