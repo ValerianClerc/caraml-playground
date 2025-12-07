@@ -5,7 +5,7 @@ on:
   # Automatically trigger it when detected changes in repo
   push:
     branches: 
-      [ main ]
+      [ main, fix-azure-ci ]
     paths:
     - '**'
     - '.github/workflows/caraml-server-AutoDeployTrigger-1fa4a179-0a49-457f-97a7-fffa9feb8a29.yml'
@@ -42,7 +42,7 @@ jobs:
           registryPassword: ${{ secrets.CARAMLSERVER_REGISTRY_PASSWORD }}
           containerAppName: caraml-server
           resourceGroup: caraml
-          imageToBuild: registry.hub.docker.com/caraml-server:${{ github.sha }}
+          imageToBuild: registry.hub.docker.com/vclerc/caraml-server:${{ github.sha }}
           _buildArgumentsKey_: |
             _buildArgumentsValues_
 
