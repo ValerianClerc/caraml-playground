@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { cva, VariantProps } from "class-variance-authority";
 import React, { ButtonHTMLAttributes } from "react";
 import { Slot } from "@radix-ui/react-slot";
+import { Tooltip } from "./Tooltip";
 
 const buttonVariants = cva(
   "font-head transition-all rounded outline-hidden cursor-pointer duration-200 font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed",
@@ -34,6 +35,7 @@ export interface IButtonProps
   extends ButtonHTMLAttributes<HTMLButtonElement>,
   VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  disabledText?: string;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, IButtonProps>(
@@ -45,12 +47,13 @@ export const Button = React.forwardRef<HTMLButtonElement, IButtonProps>(
       variant = "default",
       asChild = false,
       disabled,
+      disabledText,
       ...props
     }: IButtonProps,
     forwardedRef,
   ) => {
     const Comp = asChild ? Slot : "button";
-    return (
+    const buttonElement = (
       <Comp
         ref={forwardedRef}
         className={cn(buttonVariants({ variant, size }), className)}
@@ -60,6 +63,19 @@ export const Button = React.forwardRef<HTMLButtonElement, IButtonProps>(
         {children}
       </Comp>
     );
+
+    if (disabled && disabledText) {
+      return (
+        <Tooltip>
+          <Tooltip.Trigger asChild>
+            {buttonElement}
+          </Tooltip.Trigger>
+          <Tooltip.Content>{disabledText}</Tooltip.Content>
+        </Tooltip>
+      );
+    }
+
+    return buttonElement;
   },
 );
 

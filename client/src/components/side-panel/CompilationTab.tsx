@@ -43,6 +43,6 @@ export const CompilationTab = ({ run, navigateToExecTab }: Props) => {
       </>
     )}
 
-    <Button className="w-fit self-end" onClick={onRunClick}>Run</Button>
+    <Button className="w-fit self-end" disabled={currentRun?.status !== "succeeded"} disabledText="You must compile code before you can run it" onClick={onRunClick}>Run</Button>
   </div>
 }

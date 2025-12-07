@@ -1,6 +1,7 @@
 import { CodeEditor } from "@/components/CodeEditor";
 import { ExecSidePanel } from "@/components/side-panel/ExecSidePanel";
 import { RunSelector } from "@/components/RunSelector";
+import { DeleteButton } from "@/components/DeleteButton";
 
 export const CodeEditorLayout = () => {
   return (
@@ -9,7 +10,10 @@ export const CodeEditorLayout = () => {
         <CodeEditor />
       </div>
       <div className="w-2/5 flex flex-col gap-2">
-        <RunSelector />
+        <div className="flex flex-row justify-between items-center">
+          <RunSelector />
+          <DeleteButton />
+        </div>
         <ExecSidePanel />
       </div>
     </div>

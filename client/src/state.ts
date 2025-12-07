@@ -9,6 +9,7 @@ interface AppState {
   setCurrentRunId: (runId: string | undefined) => void;
   addOrUpdateRun: (run: Run) => void;
   removeRun: (id: string) => void;
+  clearRuns: () => void;
 }
 
 export const useAppState = create<AppState>()(
@@ -27,6 +28,7 @@ export const useAppState = create<AppState>()(
           const currentRunId = state.currentRunId === id ? undefined : state.currentRunId;
           return { runs: rest, currentRunId };
         }),
+      clearRuns: () => set({ runs: {}, currentRunId: undefined }),
     }),
     {
       name: "caraml-playground-state", // key in localStorage
