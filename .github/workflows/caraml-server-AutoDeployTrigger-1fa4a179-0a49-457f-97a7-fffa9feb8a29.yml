@@ -8,7 +8,7 @@ on:
       [ main, fix-azure-ci ]
     paths:
     - '**'
-    - '.github/workflows/caraml-server-AutoDeployTrigger-00513e53-5715-4ca6-abcb-bbf6dc91c171.yml'
+    - '.github/workflows/caraml-server-AutoDeployTrigger-1fa4a179-0a49-457f-97a7-fffa9feb8a29.yml'
 
   # Allow manual trigger 
   workflow_dispatch:      
@@ -37,12 +37,12 @@ jobs:
           appSourcePath: ${{ github.workspace }}/server
           _dockerfilePathKey_: _dockerfilePath_
           _targetLabelKey_: _targetLabel_
-          registryUrl: docker.com
+          registryUrl: registry.hub.docker.com
           registryUsername: ${{ secrets.CARAMLSERVER_REGISTRY_USERNAME }}
           registryPassword: ${{ secrets.CARAMLSERVER_REGISTRY_PASSWORD }}
           containerAppName: caraml-server
           resourceGroup: caraml
-          imageToBuild: docker.com/vclerc/caraml-server:${{ github.sha }}
+          imageToBuild: registry.hub.docker.com/vclerc/caraml-server:${{ github.sha }}
           _buildArgumentsKey_: |
             _buildArgumentsValues_
 
