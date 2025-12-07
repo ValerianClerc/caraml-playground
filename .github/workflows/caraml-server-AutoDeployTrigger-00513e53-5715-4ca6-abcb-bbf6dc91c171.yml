@@ -5,7 +5,7 @@ on:
   # Automatically trigger it when detected changes in repo
   push:
     branches: 
-      [ main ]
+      [ main, fix-azure-ci ]
     paths:
     - '**'
     - '.github/workflows/caraml-server-AutoDeployTrigger-00513e53-5715-4ca6-abcb-bbf6dc91c171.yml'
